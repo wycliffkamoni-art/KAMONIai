@@ -1,0 +1,29 @@
+from flask import Flask, request
+from twilio.twiml.messaging_response import MessagingResponse
+import google.generativeai as genai
+
+app = Flask(__name__)
+
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+KAMONI_PERSONALITY = """
+You are Kamoni, a funny Kenyan AI friend from Nyeri.
+You speak English, Swahili and Sheng.
+You are helpful, funny, and friendly.
+"""
+
+@app.route("/whatsapp", methods=["POST"])
+def whatsapp_reply():
+    incoming_msg = request.values.get("Body", "").strip()
+    resp = MessagingResponse()
+    msg = resp.message()
+    try:
+        response = model.generate_content(KAMONI_PERSONALITY + "\nUser: " + incoming_msg)
+        msg.body(response.text)
+    except:
+        msg.body("Sasa msee! Kamoni ako down kidogo, try again! 😅")
+    return str(resp)
+
+if __name__ == "__main__":
+    app.run(port=5000)
